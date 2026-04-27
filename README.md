@@ -34,10 +34,10 @@ npm run build
 
 What it does:
 
-- Removes and recreates `dist/`
-- Copies `assets/` into `dist/assets/`
+- Removes and recreates `dist/` and `public/`
+- Copies `assets/` into both `dist/assets/` and `public/assets/`
 - Minifies `index.html`, `styles.css`, and `script.js`
-- Writes minified files into `dist/`
+- Writes minified files into both `dist/` and `public/`
 
 ## Clean Build Output
 

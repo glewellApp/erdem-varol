@@ -8,6 +8,8 @@ const { minify: minifyHtml } = require('html-minifier-terser');
 
 const ROOT_DIR = __dirname;
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
+const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
+const OUTPUT_DIRS = [DIST_DIR, PUBLIC_DIR];
 const HTML_FILE = 'index.html';
 const CSS_FILE = 'styles.css';
 const JS_FILE = 'script.js';
@@ -17,9 +19,9 @@ function hasFlag(flag) {
   return process.argv.includes(flag);
 }
 
-async function cleanDist() {
-  await fs.remove(DIST_DIR);
-  console.log('Removed dist directory.');
+async function cleanOutputs() {
+  await Promise.all(OUTPUT_DIRS.map((outputDir) => fs.remove(outputDir)));
+  console.log('Removed dist/ and public/ directories.');
 }
 
 async function validateSources() {
@@ -39,12 +41,16 @@ async function validateSources() {
 
 async function build() {
   await validateSources();
-  await cleanDist();
-  await fs.ensureDir(DIST_DIR);
+  await cleanOutputs();
+  await Promise.all(OUTPUT_DIRS.map((outputDir) => fs.ensureDir(outputDir)));
 
   const assetsSource = path.join(ROOT_DIR, ASSETS_DIR);
   if (await fs.pathExists(assetsSource)) {
-    await fs.copy(assetsSource, path.join(DIST_DIR, ASSETS_DIR));
+    await Promise.all(
+      OUTPUT_DIRS.map((outputDir) =>
+        fs.copy(assetsSource, path.join(outputDir, ASSETS_DIR))
+      )
+    );
   }
 
   const [htmlSource, cssSource, jsSource] = await Promise.all([
@@ -79,19 +85,21 @@ async function build() {
     minifyJS: false,
   });
 
-  await Promise.all([
-    fs.writeFile(path.join(DIST_DIR, HTML_FILE), htmlResult, 'utf8'),
-    fs.writeFile(path.join(DIST_DIR, CSS_FILE), cssResult.styles, 'utf8'),
-    fs.writeFile(path.join(DIST_DIR, JS_FILE), jsResult.code, 'utf8'),
-  ]);
+  await Promise.all(
+    OUTPUT_DIRS.flatMap((outputDir) => [
+      fs.writeFile(path.join(outputDir, HTML_FILE), htmlResult, 'utf8'),
+      fs.writeFile(path.join(outputDir, CSS_FILE), cssResult.styles, 'utf8'),
+      fs.writeFile(path.join(outputDir, JS_FILE), jsResult.code, 'utf8'),
+    ])
+  );
 
-  console.log('Build complete. Minified files written to dist/.');
+  console.log('Build complete. Minified files written to dist/ and public/.');
 }
 
 (async () => {
   try {
     if (hasFlag('--clean')) {
-      await cleanDist();
+      await cleanOutputs();
       return;
     }
 
