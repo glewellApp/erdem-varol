@@ -1,0 +1,14 @@
+{
+  "name": "lawyer-template",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "clean": "node build.js --clean"
+  },
+  "dependencies": {
+    "clean-css": "^5.3.3",
+    "fs-extra": "^11.3.4",
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.46.2"
+  }
+}
